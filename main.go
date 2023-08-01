@@ -1,11 +1,9 @@
 package main
 
 import (
-	"io"
-	"io/ioutil"
-	"net/http"
+	"simple-webcrawler/engine"
 	"simple-webcrawler/lib/logger"
-	"simple-webcrawler/parser"
+	"simple-webcrawler/zhenai/parser"
 )
 
 const WebsiteUrl = "http://www.zhenai.com/zhenghun"
@@ -17,24 +15,8 @@ func main() {
 		Ext:        "log",
 		TimeFormat: "2006-01-02",
 	})
-	resp, err := http.Get(WebsiteUrl)
-	if err != nil {
-		panic(err)
-	}
-	defer func(Body io.ReadCloser) {
-		err := Body.Close()
-		if err != nil {
-			return
-		}
-	}(resp.Body)
-	if resp.StatusCode != http.StatusOK {
-		logger.Error("Error: status code: ", resp.StatusCode)
-		return
-	} else {
-		rawData, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			panic(err)
-		}
-		parser.ParseCityList(rawData)
-	}
+	engine.Run(engine.Request{
+		Url:        WebsiteUrl,
+		ParserFunc: parser.ParseCityList,
+	})
 }
