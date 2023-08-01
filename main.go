@@ -1,35 +1,40 @@
 package main
 
 import (
-	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
-	"regexp"
+	"simple-webcrawler/lib/logger"
+	"simple-webcrawler/parser"
 )
 
+const WebsiteUrl = "http://www.zhenai.com/zhenghun"
+
 func main() {
-	resp, err := http.Get("http://www.zhenai.com/zhenghun")
+	logger.Setup(&logger.Settings{
+		Path:       "logs",
+		Name:       "simple-godis",
+		Ext:        "log",
+		TimeFormat: "2006-01-02",
+	})
+	resp, err := http.Get(WebsiteUrl)
 	if err != nil {
 		panic(err)
 	}
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			return
+		}
+	}(resp.Body)
 	if resp.StatusCode != http.StatusOK {
-		fmt.Println("Error: status code: ", resp.StatusCode)
+		logger.Error("Error: status code: ", resp.StatusCode)
 		return
 	} else {
-		all, err := ioutil.ReadAll(resp.Body)
+		rawData, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
 			panic(err)
 		}
-		processAll(all)
+		parser.ParseCityList(rawData)
 	}
-}
-
-func processAll(contents []byte) {
-	re := regexp.MustCompile(`<a href="(http://www.zhenai.com.zhenghun/[0-9a-z]+)"[^>]*>([^<]+)</a>`)
-	matches := re.FindAllSubmatch(contents, -1)
-	for _, match := range matches {
-		fmt.Printf("City: %s, Url: %s\n", match[2], match[1])
-	}
-	fmt.Printf("Matches found: %d\n", len(matches))
 }
