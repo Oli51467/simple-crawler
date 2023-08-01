@@ -17,7 +17,7 @@ func Run(seeds ...Request) {
 		request := requestQueue[0]
 		requestQueue = requestQueue[1:]
 
-		logger.Info("fetching" + request.Url)
+		logger.Info("fetching: " + request.Url)
 		fetchRawResult, err := fetcher.Fetch(request.Url)
 		if err != nil {
 			logger.Error(fmt.Sprintf("Fetch error "+"fetching url %s %v", request.Url, err))
